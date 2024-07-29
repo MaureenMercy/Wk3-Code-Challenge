@@ -1,62 +1,75 @@
 // Global variables
+const BASE_URL = 'http://localhost:3000';
 let currentMovie;
 
-// DOM Elements
+// DOM elements
 const movieDetails = document.getElementById('movie-details');
-const filmsList = document.getElementById('films');
+const moviePoster = document.getElementById('movie-poster');
+const movieTitle = document.getElementById('movie-title');
+const movieRuntime = document.getElementById('movie-runtime');
+const movieShowtime = document.getElementById('movie-showtime');
+const availableTickets = document.getElementById('available-tickets');
 const buyTicketButton = document.getElementById('buy-ticket');
+const filmsList = document.getElementById('films');
 
-// Fetch first movie and all movies
-document.addEventListener('DOMContentLoaded', () => {
-  fetchFirstMovie();
-  fetchAllMovies();
-});
-
-// Fetch and display first movie
-function fetchFirstMovie() {
-  fetch('http://localhost:3000/films/1')
-    .then(response => response.json())
-    .then(movie => {
-      currentMovie = movie;
-      displayMovieDetails(movie);
-    });
+// Fetch movie data from the server
+async function fetchMovie(id) {
+    const response = await fetch(`${BASE_URL}/films/${id}`);
+    const movie = await response.json();
+    return movie;
 }
 
-// Fetch and display all movies
-function fetchAllMovies() {
-  fetch('http://localhost:3000/films')
-    .then(response => response.json())
-    .then(movies => {
-      displayMoviesList(movies);
-    });
+// Fetch all movies from the server
+async function fetchAllMovies() {
+    const response = await fetch(`${BASE_URL}/films`);
+    const movies = await response.json();
+    return movies;
 }
 
 // Display movie details
 function displayMovieDetails(movie) {
-  // Update the movie-details element with movie information
-  // Calculate and display available tickets
+    currentMovie = movie;
+    moviePoster.src = movie.poster;
+    movieTitle.textContent = movie.title;
+    movieRuntime.textContent = `Runtime: ${movie.runtime} minutes`;
+    movieShowtime.textContent = `Showtime: ${movie.showtime}`;
+    const ticketsAvailable = movie.capacity - movie.tickets_sold;
+    availableTickets.textContent = `Available Tickets: ${ticketsAvailable}`;
+    buyTicketButton.disabled = ticketsAvailable === 0;
 }
 
-// Display movies list
-function displayMoviesList(movies) {
-  // Clear existing list items
-  filmsList.innerHTML = '';
-  
-  // Create and append new list items for each movie
+// Populate the films menu
+function populateFilmsMenu(movies) {
+    filmsList.innerHTML = '';
+    movies.forEach(movie => {
+        const li = document.createElement('li');
+        li.textContent = movie.title;
+        li.classList.add('film', 'item');
+        filmsList.appendChild(li);
+    });
 }
 
 // Buy ticket function
 function buyTicket() {
-  if (currentMovie.tickets_sold < currentMovie.capacity) {
-    currentMovie.tickets_sold++;
-    displayMovieDetails(currentMovie);
-  }
-  
-  if (currentMovie.tickets_sold === currentMovie.capacity) {
-    buyTicketButton.disabled = true;
-    buyTicketButton.textContent = 'Sold Out';
-  }
+    if (currentMovie.tickets_sold < currentMovie.capacity) {
+        currentMovie.tickets_sold++;
+        const ticketsAvailable = currentMovie.capacity - currentMovie.tickets_sold;
+        availableTickets.textContent = `Available Tickets: ${ticketsAvailable}`;
+        buyTicketButton.disabled = ticketsAvailable === 0;
+    }
 }
 
-// Add event listener to Buy Ticket button
+// Event listeners
 buyTicketButton.addEventListener('click', buyTicket);
+
+// Initialize the app
+async function init() {
+    const firstMovie = await fetchMovie(1);
+    displayMovieDetails(firstMovie);
+
+    const allMovies = await fetchAllMovies();
+    populateFilmsMenu(allMovies);
+}
+
+// Run the app
+init();
