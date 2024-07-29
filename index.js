@@ -1,5 +1,5 @@
 // Global variables
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://json-server-vercel-ecru-five.vercel.app";
 let currentMovie;
 
 // DOM elements
